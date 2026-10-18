@@ -1,7 +1,12 @@
 [hooks]
 colors_changed = "~/.local/bin/theme-sync"
-started        = "~/.local/bin/theme-sync"
+started = "~/.local/bin/theme-sync"
+wallpaper_changed = "~/.local/bin/sddm-wallpaper"
 
 [theme.templates.user.zathura]
-input_path  = "~/.config/noctalia/templates/zathura-colors"
+input_path = "~/.config/noctalia/templates/zathura-colors"
 output_path = "~/.config/zathura/noctalia-colors"
+
+[theme.templates.user.sddm]
+input_path = "$XDG_CONFIG_HOME/noctalia/templates/sddm-astronaut.conf"
+output_path = "/usr/share/sddm/themes/sddm-astronaut-theme/Themes/astronaut.conf.user"

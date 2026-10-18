@@ -111,6 +111,10 @@ alias v='nvim' sv='sudoedit'
 alias -g G='| grep -i' L='| less' NE='2>/dev/null'      # e.g. pacman -Q G python
 alias -s {md,txt,lua,toml,conf}=nvim                    # type notes.md to open it
 
+# --- personal aliases ---
+alias edit='$EDITOR'
+alias sedit='sudoedit'
+
 # --- yazi: cd into the dir you were in when quitting ---
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd

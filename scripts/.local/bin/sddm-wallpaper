@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Copy Noctalia's current wallpaper to the SDDM astronaut theme.
+set -u
+dest=/usr/share/sddm/themes/sddm-astronaut-theme/Backgrounds/user/wallpaper
+
+src=$(noctalia msg wallpaper-get) || exit 0
+[[ -f $src ]] || exit 0                 # no wallpaper set, or Noctalia not running
+cmp -s "$src" "$dest" && exit 0         # already up to date
+
+cp -- "$src" "$dest.tmp" && chmod 644 "$dest.tmp" && mv -f -- "$dest.tmp" "$dest"
