@@ -6,6 +6,20 @@
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")"
 
+# Must run as your user (it calls sudo itself); otherwise $USER is root and ownership would be wrong
+[[ $EUID -ne 0 ]] || { echo "run as your user, not with sudo" >&2; exit 1; }
+
+# SDDM astronaut theme: user-writable spots for the Noctalia template and sddm-wallpaper
+sddm_setup() {
+  local T=/usr/share/sddm/themes/sddm-astronaut-theme
+  [[ -d $T ]] || { echo "skip sddm: theme not installed (yay -S sddm-astronaut-theme)"; return; }
+  sudo install -d -o "$USER" -g "$USER" -m 755 "$T/Backgrounds/user"
+  sudo touch "$T/Themes/astronaut.conf.user"
+  sudo chown "$USER:$USER" "$T/Themes/astronaut.conf.user"
+  sudo chmod 644 "$T/Themes/astronaut.conf.user"
+  echo "sddm: theme files ready (switch palette once + run sddm-wallpaper to fill them)"
+}
+
 # "path mode": safe to install on a fresh install of this machine
 INSTALL=(
   "etc/udev/rules.d/90-no-nvme-wakeup.rules 644"
@@ -46,6 +60,7 @@ install)
     sudo install -D -o root -g root -m "$mode" "$f" "/$f"
     echo "installed  /$f"
   done
+  sddm_setup
   echo "If relevant: sudo grub-mkconfig -o /boot/grub/grub.cfg; sudo udevadm control --reload" ;;
 *) echo "usage: $0 [diff|collect|install]" >&2; exit 1 ;;
 esac
