@@ -1,0 +1,12 @@
+id           = "local/colorpicker"
+name         = "Color Picker"
+version      = "1.0.0"
+plugin_api   = 3
+author       = "local"
+icon         = "color-picker"
+description  = "Pick a color from the screen with hyprpicker."
+dependencies = ["hyprpicker"]
+
+[[shortcut]]
+id    = "pick"
+entry = "shortcut.luau"

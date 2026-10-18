@@ -1,0 +1,11 @@
+# hosts/laptop.toml — rename to match `hostnamectl hostname` on the laptop
+
+[idle.behavior.lock]
+timeout = 300   # 5 min
+action = "lock"
+enabled = true
+
+[idle.behavior.sleep]
+timeout = 900   # 15 min
+action = "lock_and_suspend"
+enabled = true

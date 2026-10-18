@@ -1,0 +1,7 @@
+[hooks]
+colors_changed = "~/.local/bin/theme-sync"
+started        = "~/.local/bin/theme-sync"
+
+[theme.templates.user.zathura]
+input_path  = "~/.config/noctalia/templates/zathura-colors"
+output_path = "~/.config/zathura/noctalia-colors"

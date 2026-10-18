@@ -1,0 +1,7 @@
+# hosts/pc.toml — rename to match `hostnamectl hostname` on the PC
+# Settings that differ between machines go here (and only here, not in config.toml).
+
+[idle.behavior.lock]
+timeout = 900   # 15 min
+action = "lock"
+enabled = true
