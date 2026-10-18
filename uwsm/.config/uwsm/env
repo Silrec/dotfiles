@@ -1,0 +1,5 @@
+# Read by uwsm for every compositor; exported to systemd, so autostarted/D-Bus apps get it too.
+export XCURSOR_THEME=breeze_cursors
+export XCURSOR_SIZE=24
+export XDG_MENU_PREFIX=arch-
+export QT_QPA_PLATFORMTHEME=qt5ct

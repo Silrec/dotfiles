@@ -19,6 +19,8 @@ INSTALL=(
   "etc/xdg/reflector/reflector.conf 644"
   "etc/smartd.conf 644"
   "etc/snapper/configs/root 640"
+  "usr/local/share/wayland-sessions/hyprland.desktop 644"
+  "usr/local/share/wayland-sessions/hyprland-uwsm.desktop 644"
   "usr/lib/systemd/system-sleep/nut-driver-restart 755"
 )
 
