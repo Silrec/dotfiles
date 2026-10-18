@@ -1,0 +1,3 @@
+#!/bin/sh
+set -a; . /etc/restic/env; set +a
+exec /usr/bin/restic "$@"

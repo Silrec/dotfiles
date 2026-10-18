@@ -41,6 +41,7 @@ github-cli
 gnome-keyring
 go
 gparted
+gptfdisk
 grim
 grub
 grub-btrfs
@@ -93,6 +94,7 @@ linux
 linux-firmware
 linux-lts
 lutris
+lvm2
 man-db
 man-pages
 milou
@@ -150,6 +152,7 @@ python-pip
 qqc2-breeze-style
 qt5-wayland
 qt6-wayland
+restic
 ripgrep
 rsync
 rtkit

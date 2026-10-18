@@ -11,6 +11,11 @@ INSTALL=(
   "etc/udev/rules.d/90-no-nvme-wakeup.rules 644"
   "etc/sddm.conf.d/10-local.conf 644"
   "etc/grub.d/50_custom 755"
+  "etc/restic/env 644"
+  "etc/restic/excludes 644"
+  "usr/local/bin/restic-sys 755"
+  "etc/systemd/system/restic-backup.service 644"
+  "etc/systemd/system/restic-backup.timer 644"
   "usr/lib/systemd/system-sleep/nut-driver-restart 755"
 )
 

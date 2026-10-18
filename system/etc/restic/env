@@ -1,0 +1,2 @@
+RESTIC_REPOSITORY=/mnt/backup/restic
+RESTIC_PASSWORD_FILE=/etc/restic/password

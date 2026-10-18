@@ -1,0 +1,12 @@
+[Unit]
+Description=restic backup of /etc and /home
+RequiresMountsFor=/mnt/backup
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/restic/env
+ExecStart=/usr/bin/restic backup --exclude-caches --exclude-file=/etc/restic/excludes /etc /home
+ExecStartPost=/usr/bin/restic forget --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 12
+SuccessExitStatus=3
+Nice=19
+IOSchedulingClass=idle

@@ -1,0 +1,7 @@
+/home/.snapshots
+/home/*/.cache
+/home/*/.local/share/Trash
+/home/*/.var/app/*/cache
+/home/*/.local/share/Steam/steamapps/common
+/home/*/.local/share/Steam/steamapps/shadercache
+/home/*/.local/share/Steam/steamapps/downloading

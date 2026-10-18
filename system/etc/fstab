@@ -27,3 +27,5 @@ UUID=f71bf4e5-6237-4838-8bff-44b0836e36ee	/swap		btrfs     	rw,noatime,ssd,subvo
 # /dev/nvme0n1p1
 UUID=6FA7-A511      	/boot      	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro	0 2
 
+# /mnt/backup data backup
+LABEL=backup  /mnt/backup  ext4  noatime,nofail,noauto,x-systemd.automount  0 2
