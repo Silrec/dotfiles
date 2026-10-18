@@ -1,0 +1,6 @@
+#!/bin/sh
+# usbhid-ups often doesn't reattach after resume, so restart the driver on wake.
+# --no-block: queue the restart and return immediately; systemd-sleep keeps the
+# whole user session frozen until every hook has exited.
+[ "$1" = post ] && systemctl restart --no-block nut-driver@cyberpower
+exit 0

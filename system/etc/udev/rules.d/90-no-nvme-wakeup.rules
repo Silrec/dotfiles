@@ -1,0 +1,3 @@
+# GPP0 root port and the NVMe behind it: never wake the system from suspend
+ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:00:01.1", ATTR{power/wakeup}="disabled"
+ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:01:00.0", ATTR{power/wakeup}="disabled"
