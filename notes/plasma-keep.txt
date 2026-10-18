@@ -1,0 +1,9 @@
+breeze
+kde-cli-tools
+dolphin
+ffmpegthumbs
+kdegraphics-thumbnailers
+breeze-cursors
+kdecoration
+kio-extras
+plasma-activities
