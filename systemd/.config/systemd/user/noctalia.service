@@ -5,6 +5,7 @@ After=graphical-session.target
 Requisite=graphical-session.target
 
 [Service]
+KillMode=process
 ExecStart=/usr/bin/noctalia
 Restart=on-failure
 RestartSec=1
