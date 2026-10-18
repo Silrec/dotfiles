@@ -1,0 +1,315 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+# Active palette. ~/.local/bin/theme-sync rewrites this line when the Noctalia palette changes.
+# Slots: <segment>_bg = segment background, <segment>_fg = text on it.
+#   os = OS icon + user | dir = directory | git = branch/status | lang = language versions
+#   env = docker/conda/pixi | time = clock | char_* = prompt arrow (ok, error, vim modes)
+palette = "nord"
+
+format = """
+[ ](bg:os_bg)\
+$os\
+$username\
+[](bg:dir_bg fg:os_bg)\
+$directory\
+[](fg:dir_bg bg:git_bg)\
+$git_branch\
+$git_status\
+[](fg:git_bg bg:lang_bg)\
+$c\
+$cpp\
+$rust\
+$golang\
+$nodejs\
+$bun\
+$php\
+$java\
+$kotlin\
+$haskell\
+$python\
+[](fg:lang_bg bg:env_bg)\
+$docker_context\
+$conda\
+$pixi\
+[](fg:env_bg bg:time_bg)\
+$time\
+[\uE0B0 ](fg:time_bg)\
+$line_break$character"""
+
+
+
+[os]
+disabled = false
+style = "bg:os_bg fg:os_fg"
+
+[os.symbols]
+Windows = "󰍲"
+Ubuntu = "󰕈"
+SUSE = ""
+Raspbian = "󰐿"
+Mint = "󰣭"
+Macos = "󰀵"
+Manjaro = ""
+Linux = "󰌽"
+Gentoo = "󰣨"
+Fedora = "󰣛"
+Alpine = ""
+Amazon = ""
+Android = ""
+AOSC = ""
+Arch = "󰣇"
+Artix = "󰣇"
+EndeavourOS = ""
+CentOS = ""
+Debian = "󰣚"
+Redhat = "󱄛"
+RedHatEnterprise = "󱄛"
+Pop = ""
+
+[username]
+show_always = true
+style_user = "bg:os_bg fg:os_fg"
+style_root = "bg:os_bg fg:os_fg"
+format = '[ $user ]($style)'
+
+[directory]
+style = "fg:dir_fg bg:dir_bg"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = "󰝚 "
+"Pictures" = " "
+"Developer" = "󰲋 "
+
+[git_branch]
+symbol = ""
+style = "bg:git_bg"
+format = '[[ $symbol $branch ](fg:git_fg bg:git_bg)]($style)'
+
+[git_status]
+style = "bg:git_bg"
+format = '[[($all_status$ahead_behind )](fg:git_fg bg:git_bg)]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[bun]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[c]
+symbol = " "
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[cpp]
+symbol = " "
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[rust]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[golang]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[php]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[java]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[kotlin]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[haskell]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[python]
+symbol = ""
+style = "bg:lang_bg"
+format = '[[ $symbol( $version) ](fg:lang_fg bg:lang_bg)]($style)'
+
+[docker_context]
+symbol = ""
+style = "bg:env_bg"
+format = '[[ $symbol( $context) ](fg:env_fg bg:env_bg)]($style)'
+
+[conda]
+style = "bg:env_bg"
+format = '[[ $symbol( $environment) ](fg:env_fg bg:env_bg)]($style)'
+
+[pixi]
+style = "bg:env_bg"
+format = '[[ $symbol( $version)( $environment) ](fg:env_fg bg:env_bg)]($style)'
+
+[time]
+disabled = false
+time_format = "%R"
+style = "bg:time_bg"
+format = '[[  $time ](fg:time_fg bg:time_bg)]($style)'
+
+[line_break]
+disabled = false
+
+[character]
+disabled = false
+success_symbol = '[ ❯](bold fg:char_ok)'
+error_symbol = '[ ❯](bold fg:char_err)'
+vimcmd_symbol = '[](bold fg:char_ok)'
+vimcmd_replace_one_symbol = '[](bold fg:char_replace)'
+vimcmd_replace_symbol = '[](bold fg:char_replace)'
+vimcmd_visual_symbol = '[](bold fg:char_visual)'
+
+# ---------------- Palettes ----------------
+
+# your original gruvbox-rainbow colours
+[palettes.gruvbox]
+os_bg        = '#d65d0e'
+os_fg        = '#fbf1c7'
+dir_bg       = '#d79921'
+dir_fg       = '#fbf1c7'
+git_bg       = '#689d6a'
+git_fg       = '#fbf1c7'
+lang_bg      = '#458588'
+lang_fg      = '#fbf1c7'
+env_bg       = '#665c54'
+env_fg       = '#83a598'
+time_bg      = '#3c3836'
+time_fg      = '#fbf1c7'
+char_ok      = '#98971a'
+char_err     = '#cc241d'
+char_replace = '#b16286'
+char_visual  = '#d79921'
+
+# from the tokyo-night preset (+ env/time darkened to fill 6 segments)
+[palettes.tokyo_night]
+os_bg        = '#a3aed2'
+os_fg        = '#090c0c'
+dir_bg       = '#769ff0'
+dir_fg       = '#e3e5e5'
+git_bg       = '#394260'
+git_fg       = '#769ff0'
+lang_bg      = '#2b3150'
+lang_fg      = '#769ff0'
+env_bg       = '#212736'
+env_fg       = '#769ff0'
+time_bg      = '#1d2230'
+time_fg      = '#a0a9cb'
+char_ok      = '#9ece6a'
+char_err     = '#f7768e'
+char_replace = '#bb9af7'
+char_visual  = '#e0af68'
+
+# from the catppuccin-powerline preset
+[palettes.catppuccin_mocha]
+os_bg        = '#f38ba8'
+os_fg        = '#11111b'
+dir_bg       = '#fab387'
+dir_fg       = '#11111b'
+git_bg       = '#f9e2af'
+git_fg       = '#11111b'
+lang_bg      = '#a6e3a1'
+lang_fg      = '#11111b'
+env_bg       = '#74c7ec'
+env_fg       = '#11111b'
+time_bg      = '#b4befe'
+time_fg      = '#11111b'
+char_ok      = '#a6e3a1'
+char_err     = '#f38ba8'
+char_replace = '#b4befe'
+char_visual  = '#f9e2af'
+
+# official Dracula colours, tokyo-night layout (accents fade into dark surfaces)
+[palettes.dracula]
+os_bg        = '#bd93f9'
+os_fg        = '#282a36'
+dir_bg       = '#6272a4'
+dir_fg       = '#f8f8f2'
+git_bg       = '#44475a'
+git_fg       = '#50fa7b'
+lang_bg      = '#3a3c4e'
+lang_fg      = '#8be9fd'
+env_bg       = '#303241'
+env_fg       = '#ffb86c'
+time_bg      = '#21222c'
+time_fg      = '#bd93f9'
+char_ok      = '#50fa7b'
+char_err     = '#ff5555'
+char_replace = '#ff79c6'
+char_visual  = '#f1fa8c'
+
+# official Nord colours: frost gradient into polar night
+[palettes.nord]
+os_bg        = '#5e81ac'
+os_fg        = '#eceff4'
+dir_bg       = '#81a1c1'
+dir_fg       = '#2e3440'
+git_bg       = '#88c0d0'
+git_fg       = '#2e3440'
+lang_bg      = '#a3be8c'
+lang_fg      = '#2e3440'
+env_bg       = '#4c566a'
+env_fg       = '#d8dee9'
+time_bg      = '#3b4252'
+time_fg      = '#d8dee9'
+char_ok      = '#a3be8c'
+char_err     = '#bf616a'
+char_replace = '#b48ead'
+char_visual  = '#ebcb8b'
+
+# official Kanagawa Wave colours, gruvbox-rainbow layout
+[palettes.kanagawa]
+os_bg        = '#ffa066'
+os_fg        = '#1f1f28'
+dir_bg       = '#e6c384'
+dir_fg       = '#1f1f28'
+git_bg       = '#7aa89f'
+git_fg       = '#1f1f28'
+lang_bg      = '#7e9cd8'
+lang_fg      = '#1f1f28'
+env_bg       = '#54546d'
+env_fg       = '#dcd7ba'
+time_bg      = '#2a2a37'
+time_fg      = '#dcd7ba'
+char_ok      = '#98bb6c'
+char_err     = '#e46876'
+char_replace = '#957fb8'
+char_visual  = '#e6c384'
+
+# official Rosé Pine (main) colours, gruvbox-rainbow layout
+[palettes.rose_pine]
+os_bg        = '#ebbcba'
+os_fg        = '#191724'
+dir_bg       = '#f6c177'
+dir_fg       = '#191724'
+git_bg       = '#9ccfd8'
+git_fg       = '#191724'
+lang_bg      = '#31748f'
+lang_fg      = '#e0def4'
+env_bg       = '#524f67'
+env_fg       = '#e0def4'
+time_bg      = '#26233a'
+time_fg      = '#e0def4'
+char_ok      = '#9ccfd8'
+char_err     = '#eb6f92'
+char_replace = '#c4a7e7'
+char_visual  = '#f6c177'

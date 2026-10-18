@@ -1,0 +1,4 @@
+[[mgr.prepend_keymap]]
+on   = [ "c", "v" ]
+run  = "plugin merge-paste"
+desc = "Paste with conflict prompt (overwrite / merge / skip / rename)"

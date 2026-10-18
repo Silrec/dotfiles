@@ -1,0 +1,11 @@
+[opener]
+# GUI apps survive closing yazi
+open = [
+	{ run = "xdg-open %s1", desc = "Open (default app)", orphan = true },
+]
+
+[open]
+prepend_rules = [
+	# Markdown: Enter → Obsidian, O → Neovim
+	{ url = "*.md", use = [ "open", "edit" ] },
+]

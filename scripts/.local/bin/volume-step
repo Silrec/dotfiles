@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# volume-step up|down: move to the next multiple of 5 (37 → 40 / 35, 35 → 40 / 30)
+set -eu
+cur=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{ printf "%d", $2 * 100 + 0.5 }')
+case $1 in
+  up)   new=$(( cur / 5 * 5 + 5 )) ;;
+  down) new=$(( (cur + 4) / 5 * 5 - 5 )) ;;
+  *)    echo "usage: volume-step up|down" >&2; exit 1 ;;
+esac
+new=$(( new < 0 ? 0 : new > 100 ? 100 : new ))
+noctalia msg volume-set "$new"
