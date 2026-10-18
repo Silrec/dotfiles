@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# session-action logout|poweroff|reboot  (called from Noctalia's session menu)
+if [[ -z ${SESSION_ACTION_DETACHED:-} ]]; then
+  exec systemd-run --user --collect --quiet -E SESSION_ACTION_DETACHED=1 \
+    -E WAYLAND_DISPLAY -E HYPRLAND_INSTANCE_SIGNATURE "$(readlink -f "$0")" "$@"
+fi
+case $1 in
+  logout)   msg='Logging out...';   post='uwsm stop' ;;
+  poweroff) msg='Shutting down...'; post='systemctl poweroff' ;;
+  reboot)   msg='Rebooting...';     post='systemctl reboot' ;;
+  *) echo "usage: session-action logout|poweroff|reboot" >&2; exit 1 ;;
+esac
+systemctl --user stop noctalia.service       # stopped on purpose: no respawn during hyprshutdown
+hyprshutdown -t "$msg" --post-cmd "$post"
+systemctl --user start noctalia.service      # only reached if you cancel

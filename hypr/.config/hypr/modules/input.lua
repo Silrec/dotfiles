@@ -8,7 +8,7 @@ hl.config({
 		-- (grp:win_space_toggle would clash with the Super+Space launcher):
 		kb_layout = "us,ru",
 		kb_variant = ",",
-		-- kb_options = "win_space_toggle",
+		kb_options = "custom:kpdigits",
 
 		follow_mouse = 1,
 		sensitivity = 0, -- -1.0 - 1.0, 0 = no change
@@ -21,3 +21,7 @@ hl.config({
 
 -- Laptop: 3-finger horizontal swipe switches workspaces
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+
+-- Numlock by default
+hl.device({ name = "sonix-montech-mk108", numlock_by_default = true })
+hl.device({ name = "sonix-montech-mk108-keyboard", numlock_by_default = true })
