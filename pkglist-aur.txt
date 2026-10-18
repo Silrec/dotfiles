@@ -1,0 +1,7 @@
+kgamma
+kwin-x11
+qt6ct-kde
+vesktop-bin
+wacomtablet
+yay-bin
+yay-bin-debug
