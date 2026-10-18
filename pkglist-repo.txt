@@ -24,7 +24,6 @@ discover
 dolphin
 dosfstools
 drkonqi
-dunst
 efibootmgr
 expac
 eza
@@ -45,6 +44,7 @@ gptfdisk
 grim
 grub
 grub-btrfs
+gst-plugins-base
 htop
 hypridle
 hyprland
@@ -67,6 +67,7 @@ kde-gtk-config
 kdecoration
 kdegraphics-thumbnailers
 kdeplasma-addons
+keepassxc
 kglobalacceld
 kinfocenter
 kitty
@@ -117,6 +118,7 @@ ocean-sound-theme
 oxygen
 oxygen-cursors
 oxygen-sounds
+pacman-contrib
 papirus-icon-theme
 pipewire
 pipewire-alsa
@@ -152,6 +154,7 @@ python-pip
 qqc2-breeze-style
 qt5-wayland
 qt6-wayland
+reflector
 restic
 ripgrep
 rsync
@@ -170,6 +173,7 @@ stow
 stress-ng
 sudo
 sway
+syncthing
 systemsettings
 telegram-desktop
 tesseract-data-rus

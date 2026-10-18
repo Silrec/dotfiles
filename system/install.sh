@@ -16,6 +16,9 @@ INSTALL=(
   "usr/local/bin/restic-sys 755"
   "etc/systemd/system/restic-backup.service 644"
   "etc/systemd/system/restic-backup.timer 644"
+  "etc/xdg/reflector/reflector.conf 644"
+  "etc/smartd.conf 644"
+  "etc/snapper/configs/root 640"
   "usr/lib/systemd/system-sleep/nut-driver-restart 755"
 )
 
