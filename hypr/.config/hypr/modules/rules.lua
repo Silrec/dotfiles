@@ -18,7 +18,7 @@ hl.window_rule({
 	name = "noctalia-settings",
 	match = { class = "dev.noctalia.Noctalia" },
 	float = true,
-	size = { 1080, 920 },
+	size = "monitor_w*0.5 monitor_h*0.7",
 })
 
 -- Apps can't maximize themselves; tiling decides window size
@@ -49,9 +49,41 @@ hl.window_rule({
 	idle_inhibit = "fullscreen",
 })
 
+hl.window_rule({
+	name = "file-dialog-portal",
+	match = { class = "^xdg-desktop-portal-gtk$" },
+	float = true,
+	size = "monitor_w*0.5 monitor_h*0.6",
+	center = true,
+})
+
+hl.window_rule({
+	name = "calculator-float",
+	match = { class = "^calculator$" },
+	float = true,
+	size = "monitor_w*0.3 monitor_h*0.4",
+	center = true,
+})
+
+hl.window_rule({
+	name = "sysmon-float",
+	match = { class = "^sysmon$" },
+	float = true,
+	size = "monitor_w*0.8 monitor_h*0.8",
+	center = true,
+})
+
+hl.window_rule({ name = "scratch-term", match = { class = "^scratch-term$" }, workspace = "special:scratchpad silent" })
+
+hl.window_rule({
+	name = "media-scratchpad",
+	match = { class = "^(media-rmpc|media-cava|Throne)$" },
+	workspace = "special:scratchpad silent",
+})
+
 -- Workspaces 1–5 always exist and have names; 6–10 still appear on demand
 --local wsNames = { "󰇊", "󰇋", "󰇌", "󰇍", "󰇎", "󰇏" }
-local wsNames = { "󱂈", "󱂉", "󱂊", "󱂋", "󱂌", "󱂍", "󱂎", "󱂏", "󱂐", "󱂑" }
-for i, name in ipairs(wsNames) do
-	hl.workspace_rule({ workspace = tostring(i), default_name = name, persistent = false })
-end
+--local wsNames = { "󱂈", "󱂉", "󱂊", "󱂋", "󱂌", "󱂍", "󱂎", "󱂏", "󱂐", "󱂑" }
+--for i, name in ipairs(wsNames) do
+--	hl.workspace_rule({ workspace = tostring(i), default_name = name, persistent = false })
+--end

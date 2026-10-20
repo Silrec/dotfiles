@@ -8,7 +8,7 @@ hl.config({
 		-- (grp:win_space_toggle would clash with the Super+Space launcher):
 		kb_layout = "us,ru",
 		kb_variant = ",",
-		kb_options = "custom:kpdigits",
+		kb_options = "grp:win_space_toggle,custom:kpdigits",
 
 		follow_mouse = 1,
 		sensitivity = 0, -- -1.0 - 1.0, 0 = no change

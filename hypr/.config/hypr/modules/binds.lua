@@ -22,7 +22,7 @@ end
 section("Shell")
 
 bind(k("F1"), kb.show, "Keybindings (this menu)")
-bind(k("ALT + Space"), n("panel-toggle launcher"), "App launcher")
+bind(k("Escape"), n("panel-toggle launcher"), "App launcher")
 bind(k("A"), n("panel-toggle control-center"), "Control center")
 bind(k("N"), n("panel-toggle control-center notifications"), "Notification history") -- tab name: verify with your version
 bind(k("I"), n("settings-toggle"), "Noctalia settings")
@@ -32,7 +32,7 @@ bind(k("L"), n("session lock"), "Lock screen")
 bind(k("X"), n("panel-toggle session"), "Session menu")
 bind("CTRL + ALT + Delete", n("panel-toggle session"), "Session menu")
 bind("ALT + Tab", n("window-switcher"), "Window switcher")
-bind(k("CTRL + SHIFT + B"), hl.dsp.exec_cmd("pkill -x noctalia; sleep 1; noctalia"), "Restart Noctalia")
+bind(k("Pause"), hl.dsp.exec_cmd("pkill -x noctalia; sleep 1; noctalia"), "Restart Noctalia")
 
 -----------------
 ---- WINDOWS ----
@@ -46,16 +46,17 @@ bind(k("SHIFT + Q"), hl.dsp.window.kill(), "Force-kill frozen window")
 bind(k("F"), hl.dsp.window.fullscreen({ mode = "fullscreen" }), "Fullscreen (covers the bar)")
 bind(k("SHIFT + F"), hl.dsp.window.fullscreen({ mode = "maximized" }), "Maximize (keeps the bar)")
 bind(k("T"), hl.dsp.window.float({ action = "toggle" }), "Toggle floating / tiling")
-bind(k("J"), hl.dsp.layout("togglesplit"), "Toggle split direction (dwindle)")
-
+if hl.get_config("general.layout") == "master" then
+	bind(k("J"), hl.dsp.layout("togglesplit"), "Toggle split direction (dwindle)")
+end
 bind(k("Z"), function()
 	local layout = hl.get_config("general.layout") == "dwindle" and "master" or "dwindle"
 	hl.config({ ["general.layout"] = layout })
 	v.notify("Layout", layout)
 end, "Switch layout: dwindle / master")
 
-bind(k("G"), hl.dsp.group.toggle(), "Group windows into tabs / ungroup")
-bind(k("grave"), hl.dsp.group.next(), "Next tab in group")
+--bind(k("G"), hl.dsp.group.toggle(), "Group windows into tabs / ungroup")
+--bind(k("grave"), hl.dsp.group.next(), "Next tab in group") -- grave is `
 
 --bind(k("M"), hl.dsp.window.move({ workspace = "special:minimized", follow = false }), "Minimize window")
 --bind(k("SHIFT + M"), hl.dsp.workspace.toggle_special("minimized"), "Show / hide minimized windows")
@@ -139,15 +140,35 @@ for i = 1, 10 do
 	end
 end
 doc("Super + 1…0", "Go to workspace 1–10")
-doc("Super + Shift + 1…0", "Move window to workspace and follow it")
-doc("Super + Alt + 1…0", "Send window to workspace silently")
+doc("Super + Shift + 1…0", "Move window to workspace and follow")
+doc("Super + Alt + 1…0", "Send window to workspace")
 
 bind(k("Tab"), hl.dsp.focus({ workspace = "previous" }), "Back to previous workspace")
 bind(k("CTRL + left"), hl.dsp.focus({ workspace = "m-1" }), "Previous workspace")
 bind(k("CTRL + right"), hl.dsp.focus({ workspace = "m+1" }), "Next workspace")
+bind(
+	k("CTRL + SHIFT + left"),
+	hl.dsp.window.move({ workspace = "r-1", follow = true }),
+	"Move window to previous workspace and follow"
+)
+bind(
+	k("CTRL + SHIFT + right"),
+	hl.dsp.window.move({ workspace = "r+1", follow = true }),
+	"Move window to next workspace and follow"
+)
+bind(
+	k("CTRL + ALT + left"),
+	hl.dsp.window.move({ workspace = "r-1", follow = false }),
+	"Send window to previous workspace"
+)
+bind(
+	k("CTRL + ALT + right"),
+	hl.dsp.window.move({ workspace = "r+1", follow = false }),
+	"Send window to next workspace"
+)
 bind(k("mouse_down"), hl.dsp.focus({ workspace = "e+1" }), "Next workspace")
 bind(k("mouse_up"), hl.dsp.focus({ workspace = "e-1" }), "Previous workspace")
-bind(k("CTRL + D"), hl.dsp.focus({ workspace = "emptym" }), "Go to an empty workspace")
+bind(k("D"), hl.dsp.focus({ workspace = "emptym" }), "Go to an empty workspace")
 
 bind(k("S"), hl.dsp.workspace.toggle_special("scratchpad"), "Show / hide scratchpad")
 bind(k("CTRL + S"), hl.dsp.window.move({ workspace = "special:scratchpad" }), "Send window to scratchpad")
@@ -176,37 +197,35 @@ bind(
 )
 bind(k("E"), hl.dsp.exec_cmd(v.fileManager), "File manager")
 bind(k("B"), hl.dsp.exec_cmd(v.browser), "Browser")
---bind(
---	"CTRL + SHIFT + escape",
---	hl.dsp.exec_cmd(v.terminal .. " -e btop", { float = true, size = { 1200, 750 }, center = true }),
---	"Task manager (btop)"
---)
+bind(k("grave"), hl.dsp.exec_cmd(v.terminal .. " --class sysmon -e btop"), "System monitor")
 
 -------------------------------
 ---- SCREENSHOTS AND TOOLS ----
 -------------------------------
 section("Screenshots and tools")
-
+kb.section("Capture")
 bind("Print", n("screenshot-fullscreen"), "Screenshot: full screen")
-bind(k("SHIFT + Print"), n("screenshot-region"), "Screenshot: region")
-
+local cap = os.getenv("HOME") .. "/.local/bin/capture "
+--kb.bind("Print", hl.dsp.exec_cmd(cap .. "menu"), "Capture menu")
+bind(k("Print"), n("screenshot-region"), "Screenshot: region")
+kb.bind(k("SHIFT + Print"), hl.dsp.exec_cmd(cap .. "menu"), "Capture menu")
 -- Active window -> clipboard (needs grim, wl-clipboard)
-bind("ALT + Print", function()
-	local w = hl.get_active_window()
-	if not w then
-		return
-	end
-	local geo = string.format("%d,%d %dx%d", w.at.x, w.at.y, w.size.x, w.size.y)
-	hl.exec_cmd('grim -g "' .. geo .. '" - | wl-copy')
-	v.notify("Screenshot", "Window copied to clipboard")
-end, "Screenshot: active window to clipboard")
+--bind("ALT + Print", function()
+--	local w = hl.get_active_window()
+--	if not w then
+--		return
+--	end
+--	local geo = string.format("%d,%d %dx%d", w.at.x, w.at.y, w.size.x, w.size.y)
+--	hl.exec_cmd('grim -g "' .. geo .. '" - | wl-copy')
+--	v.notify("Screenshot", "Window copied to clipboard")
+--end, "Screenshot: active window to clipboard")
 
 -- needs grim, slurp, tesseract, tesseract-data-eng, wl-clipboard
-bind(
-	k("SHIFT + T"),
-	hl.dsp.exec_cmd('grim -g "$(slurp)" - | tesseract stdin stdout -l eng 2>/dev/null | wl-copy'),
-	"Copy text from screen region (OCR)"
-)
+--bind(
+--	k("SHIFT + T"),
+--	hl.dsp.exec_cmd('grim -g "$(slurp)" - | tesseract stdin stdout -l eng 2>/dev/null | wl-copy'),
+--	"Copy text from screen region (OCR)"
+--)
 
 -- needs hyprpicker
 --bind(k("SHIFT + C"), hl.dsp.exec_cmd("hyprpicker -a"), "Color picker (copies hex)")
@@ -237,8 +256,8 @@ bind(k("ALT + C"), n("caffeine-toggle"), "Caffeine (block idle / lock)")
 --bind(k("ALT + B"), n("bar-toggle"), "Show / hide bar")
 --bind(k("ALT + T"), n("theme-mode-toggle"), "Dark / light theme")
 bind(k("ALT + K"), n("mic-mute"), "Mute microphone")
-bind(k("CTRL + R"), hl.dsp.exec_cmd("hyprctl reload"), "Reload Hyprland config")
-bind(k("Space"), hl.dsp.exec_cmd("hyprctl switchxkblayout current next"), "Switch keyboard layout")
+--bind(k("CTRL + R"), hl.dsp.exec_cmd("hyprctl reload"), "Reload Hyprland config")
+--bind(k("Space"), hl.dsp.exec_cmd("hyprctl switchxkblayout current next"), "Switch keyboard layout")
 
 -- Game mode: animations, blur and shadows off (reset on config reload)
 --local gameMode = false
@@ -289,8 +308,9 @@ bind("XF86AudioPause", n("media toggle"), "Play / pause", media)
 bind("XF86AudioStop", n("media stop"), "Stop", media)
 bind("XF86AudioNext", n("media next"), "Next track", media)
 bind("XF86AudioPrev", n("media previous"), "Previous track", media)
-bind("XF86Calculator", hl.dsp.exec_cmd("kitty -e qalc"), "Calculator")
+bind("XF86Calculator", hl.dsp.exec_cmd(v.terminal .. " --class calculator -e qalc"), "Calculator", media)
 
+doc("Calculator key", "Calculator")
 doc("Volume keys", "Volume up / down / mute")
 doc("Brightness keys", "Brightness up / down")
 doc("Media keys", "Prev, play / pause, stop, next")

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# media-layout: rmpc (left), btop (top right), cava (bottom right) in special:scratchpad.
+# Needs in the Hyprland config:
+#   dwindle force_split = 2  (new windows go right/bottom)
+#   window rule: class ^media-(rmpc|btop|cava)$ → workspace "special:scratchpad silent"
+set -u
+
+sp=scratchpad # special workspace name, without "special:"
+
+has() { # is a window with this class open?
+  hyprctl clients -j | jq -e --arg c "$1" 'any(.[]; .class == $c)' >/dev/null
+}
+
+shown() { # is the scratchpad visible?
+  hyprctl monitors -j | jq -e --arg n "special:$sp" 'any(.[]; .specialWorkspace.name == $n)' >/dev/null
+}
+
+dsp() { hyprctl dispatch "$1" >/dev/null; }
+focus() { dsp "hl.dsp.focus({ window = \"class:^$1\$\" })"; }
+
+open() { # open <class> <command...>, wait (max 5 s) for its window
+  local class=$1
+  shift
+  has "$class" && return
+  "$@" &
+  for _ in {1..50}; do
+    has "$class" && return
+    sleep 0.1
+  done
+  echo "media-layout: $class did not appear" >&2
+  exit 1
+}
+
+was_shown=0
+shown && was_shown=1
+
+open media-rmpc kitty --class media-rmpc -e rmpc # the rule puts it in the scratchpad
+focus media-rmpc                                 # shows the scratchpad; rmpc is now the active window
+open Throne throne                               # splits rmpc → rmpc | btop
+focus Throne
+open media-cava kitty --class media-cava -e cava # splits btop → btop over cava
+
+# hide the scratchpad again if it was hidden before we started
+if ((! was_shown)) && shown; then
+  dsp "hl.dsp.workspace.toggle_special(\"$sp\")"
+fi

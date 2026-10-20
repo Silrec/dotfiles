@@ -12,8 +12,8 @@ hl.on("hyprland.start", function()
 	end
 	local uwsm = cg:find("wayland%-wm@", 1) ~= nil
 
-	local function launch(cmd)
-		hl.exec_cmd(uwsm and ("uwsm app -- " .. cmd) or cmd)
+	local function launch(cmd, rules)
+		hl.exec_cmd(uwsm and ("uwsm app -- " .. cmd) or cmd, rules)
 	end
 
 	if not uwsm then
@@ -22,4 +22,10 @@ hl.on("hyprland.start", function()
 	if not uwsm then
 		launch("kanshi")
 	end
+
+	--local scratch = { workspace = "special:scratchpad silent" }
+	launch(os.getenv("HOME") .. "/.local/bin/media-layout")
+	--launch("kitty --class scratch-term -e cava", scratch)
+	--launch("kitty --class scratch-term -e rmpc", scratch)
+	--launch("kitty --class scratch-term -e btop", scratch)
 end)

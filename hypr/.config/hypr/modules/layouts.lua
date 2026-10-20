@@ -2,8 +2,13 @@
 -- https://wiki.hypr.land/Configuring/Layouts/
 
 hl.config({
+	general = {
+		no_focus_fallback = false, -- set to true to disable focus looping
+	},
 	dwindle = {
-		preserve_split = true,
+		force_split = 2,
+		use_active_for_splits = true,
+		-- preserve_split = true,
 	},
 	master = {
 		new_status = "master",

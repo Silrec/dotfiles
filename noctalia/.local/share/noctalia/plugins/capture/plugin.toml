@@ -1,0 +1,14 @@
+id           = "dotfiles/capture"
+name         = "Capture"
+version      = "1.0.0"
+plugin_api   = 3
+author       = "dotfiles"
+icon         = "screenshot"
+description  = "Capture menu for ~/.local/bin/capture"
+dependencies = ["grim", "slurp", "tesseract", "wf-recorder"]
+
+[[launcher_provider]]
+id     = "menu"
+entry  = "launcher.luau"
+prefix = "cap"
+glyph  = "screenshot"
