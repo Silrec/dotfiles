@@ -1,123 +1,132 @@
 #!/usr/bin/env bash
-# capture: screenshots, OCR and screen recording for Hyprland + Noctalia
-#   capture menu                     pick an action in Noctalia's launcher
-#   capture region | screen | annotate | window | ocr | record | record-region
-# Screenshots and the region overlay come from Noctalia (Settings → Screenshot
-# decides copy/save and the folder); window shots, OCR text and recording are done here.
+# capture: screenshots (with OCR on demand) and screen recording for Hyprland + Noctalia
+#   capture menu | region | screen | window | annotate | record | record-region
+#   capture pipe      (Noctalia's pipe_command: the PNG arrives on stdin)
+# Noctalia captures, saves and copies. In the region overlay: Enter/Space = save + copy,
+# Ctrl+C = copy only, Ctrl+S = save only. This script works out which one happened,
+# notifies, and offers OCR ("Extract text" puts the text in the clipboard).
 set -u
 
-pics="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots" # keep equal to Noctalia's folder
+pics="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots"   # keep equal to Noctalia's directory
 vids="$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")/Recordings"
+rt=${XDG_RUNTIME_DIR:-/tmp}
+mark='' img=''                                    # temp files, removed on exit
+trap 'rm -f ${mark:+"$mark"} ${img:+"$img"}; [[ -n ${EV_PID:-} ]] && kill "$EV_PID" 2>/dev/null' EXIT
 
-stamp() { date +%Y-%m-%d_%H-%M-%S; }
-notify() { notify-send -a capture "$@"; }
+stamp()          { date +%Y-%m-%d_%H-%M-%S; }
+notify()         { notify-send -a capture "$@"; }
 focused_output() { hyprctl monitors -j | jq -r '.[] | select(.focused) | .name'; }
-window_geom() { hyprctl activewindow -j | jq -r 'select(.at) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"'; }
-recording() { pgrep -x wf-recorder >/dev/null; }
-# slurp styled close to Noctalia's overlay: dimmed screen, clear selection, light frame, size label
-pick_region() { slurp -d -b 00000088 -s 00000000 -c ffffffcc -w 2; }
+window_geom()    { hyprctl activewindow -j | jq -r 'select(.at) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"'; }
+recording()      { pgrep -x wf-recorder >/dev/null; }
+# slurp styled close to Noctalia's overlay: dimmed screen, clear selection, light frame
+pick_region()    { slurp -d -b 00000088 -s 00000000 -c ffffffcc -w 2; }
+clip_sum()       { wl-paste --no-newline --type image/png 2>/dev/null | md5sum; }
 
-window_shot() {
-  local g
-  g=$(window_geom)
-  [[ -n $g ]] || exit 0
-  mkdir -p "$pics"
-  local f="$pics/$(stamp).png"
-  grim -g "$g" "$f" || exit 1
-  wl-copy --type image/png <"$f"
-  notify -i "$f" "Screenshot saved" "${f/#$HOME/\~} (copied to clipboard)"
+nmsg() {                                          # noctalia msg, but failures show up as a notification
+  local out; out=$(noctalia msg "$@" 2>&1)
+  if [[ $? -ne 0 || $out == error* ]]; then notify -u critical "Screenshot failed" "${out#error: }"; return 1; fi
 }
 
-ocr() {
-  # Use Noctalia's overlay: empty the clipboard, let you copy a region, OCR that image
-  wl-copy --clear
-  noctalia msg screenshot-region
-  local got=0
-  for _ in {1..600}; do # wait up to 60 s for Ctrl+C / Enter in the overlay
-    sleep 0.1
-    if wl-paste --list-types 2>/dev/null | grep -qx 'image/png'; then
-      got=1
-      break
-    fi
-  done
-  ((got)) || exit 0 # cancelled (Esc) or timed out
-
-  local text
-  text=$(wl-paste --type image/png | tesseract - - -l eng+rus 2>/dev/null)
-  if [[ -z ${text//[[:space:]]/} ]]; then
-    notify "OCR" "No text found"
-    exit 0
-  fi
-  printf '%s' "$text" | wl-copy
+report() {                                        # report IMAGE SAVED(0/1) COPIED(0/1)
+  local f=$1 title body action text
+  case $2$3 in
+    11) title="Screenshot saved and copied"; body=${f/#$HOME/\~} ;;
+    10) title="Screenshot saved";            body=${f/#$HOME/\~} ;;
+    01) title="Screenshot copied";           body="Not saved to disk" ;;
+    *)  notify -u critical "Screenshot failed"; return 1 ;;
+  esac
+  action=$(notify -i "$f" --action=ocr="Extract text" "$title" "$body")   # waits until clicked or dismissed
+  [[ $action == ocr ]] || return 0
+  text=$(tesseract "$f" - -l eng+rus 2>/dev/null)
+  if [[ -z ${text//[[:space:]]/} ]]; then notify "No text found"; return 0; fi
+  printf '%s' "$text" | wl-copy                   # replaces the image in the clipboard
   notify "Text copied" "$(printf '%s' "$text" | head -c 200)"
 }
 
-record() { # record [geometry]: starts, or stops if already running
+from_pipe() {                                     # Noctalia already saved and/or copied; find out which
+  local f=${NOCTALIA_SCREENSHOT_PATH:-} saved=0 copied=0
+  img=$(mktemp -p "$rt" capture.XXXXXX.png) || exit 1
+  cat > "$img" || exit 1
+  [[ -n $f && -s $f ]] && saved=1                 # Noctalia writes the file before starting us
+  wl-paste --no-newline --type image/png 2>/dev/null | cmp -s - "$img" && copied=1
+  if (( !saved && !copied )); then                # Noctalia's own outputs are off: do both here
+    [[ -n $f ]] || f="$pics/$(stamp).png"
+    mkdir -p "${f%/*}" && cp "$img" "$f" && saved=1
+    wl-copy --type image/png < "$img" && copied=1
+  fi
+  if (( saved )); then report "$f" "$saved" "$copied"; else report "$img" 0 "$copied"; fi
+}
+
+annotate() {                                      # the editor's Copy/Save skip pipe_command: follow the session
+  local before f g line saved=0 copied=0 open=0 seen=0 wait_s
+  local sock=$rt/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket2.sock
+  [[ -S $sock ]] || { notify -u critical "Screenshot failed" "Hyprland event socket not found"; exit 1; }
+  mark=$(mktemp -p "$rt" capture.XXXXXX) || exit 1   # files newer than this were saved in this session
+  img=$mark.png
+  before=$(clip_sum)
+  coproc EV { exec socat -U - UNIX-CONNECT:"$sock"; }   # listen first, so no event can be missed
+  local evfd=${EV[0]}
+  nmsg screenshot-annotate || exit 1
+  # Count Noctalia's editor and region-picker overlays (one per output) as Hyprland maps and unmaps them.
+  # Done when all are closed and none reopens within 0.8 s ("Capture new region" and Freeze swap them briefly).
+  while :; do
+    if (( open > 0 )); then wait_s=''              # editor open: wait as long as it takes
+    elif (( seen )); then wait_s=0.8               # all closed: grace period for a swap
+    else wait_s=5; fi                              # not open yet: it freezes the screen first
+    read -r ${wait_s:+-t "$wait_s"} line <&"$evfd" || break     # timeout, or the socket closed
+    case $line in
+      "openlayer>>noctalia-annotate"|"openlayer>>noctalia-screenshot-region")   (( ++open, seen = 1 )) ;;
+      "closelayer>>noctalia-annotate"|"closelayer>>noctalia-screenshot-region") (( open > 0 && open-- )) ;;
+    esac
+  done
+  [[ -n ${EV_PID:-} ]] && kill "$EV_PID" 2>/dev/null
+  (( seen )) || exit 0                             # the editor never appeared (nmsg reported any error)
+  f=$(find "$pics" -maxdepth 1 -name '*-annotated.png' -newer "$mark" -printf '%T@ %p\n' \
+        | sort -n | tail -n1 | cut -d' ' -f2-)
+  [[ -n $f ]] && saved=1
+  if [[ $(clip_sum) != "$before" ]] && wl-paste --no-newline --type image/png > "$img" 2>/dev/null; then
+    copied=1
+    while IFS= read -r -d '' g; do                # a Done in the region editor is reported by `capture pipe`
+      cmp -s "$g" "$img" && copied=0
+    done < <(find "$pics" -maxdepth 1 -name '*.png' ! -name '*-annotated.png' -newer "$mark" -print0)
+  fi
+  if (( saved )); then report "$f" 1 "$copied"
+  elif (( copied )); then report "$img" 0 1
+  fi                                              # neither: closed with Esc
+}
+
+window_shot() {                                   # no overlay here, so the default: save + copy
+  local g; g=$(window_geom); [[ -n $g ]] || exit 0
+  mkdir -p "$pics"
+  local f="$pics/$(stamp).png"
+  grim -g "$g" "$f" || exit 1
+  wl-copy --type image/png < "$f"
+  report "$f" 1 1
+}
+
+record() {                                        # record [geometry]: starts, or stops if already running
   if recording; then
-    pkill -INT -x wf-recorder # SIGINT lets it finish the file properly
+    pkill -INT -x wf-recorder                     # SIGINT lets it finish the file properly
     notify "Recording stopped" "Saved in ${vids/#$HOME/\~}"
     return
   fi
   mkdir -p "$vids"
   local f="$vids/$(stamp).mp4"
-  local args=(-f "$f" -c h264_vaapi -d /dev/dri/renderD128 # GPU encoding; CPU fallback: -c libx264
-    --audio="$(pactl get-default-sink).monitor")           # what you hear, not the microphone
+  local args=(-f "$f" -c h264_vaapi -d /dev/dri/renderD128      # GPU encoding; CPU fallback: -c libx264
+              --audio="$(pactl get-default-sink).monitor")       # what you hear, not the microphone
   if [[ -n ${1:-} ]]; then args+=(-g "$1"); else args+=(-o "$(focused_output)"); fi
   wf-recorder "${args[@]}" >/dev/null 2>&1 &
   notify "Recording started" "Run capture again (menu or shortcut) to stop"
 }
 
-menu() {
-  # Pressing the key again while the launcher is open closes it (same as keyhelp)
-  if pgrep -f '^noctalia dmenu' >/dev/null; then
-    noctalia msg panel-close
-    exit 0
-  fi
-
-  local items
-  if recording; then
-    items=$'⏹️  Stop recording\tA recording is running'
-  else
-    items=$'📷  Screenshot region\tSelect an area\n'
-    items+=$'🖥️  Screenshot screen\tCurrent monitor\n'
-    items+=$'🪟  Screenshot window\tActive window\n'
-    items+=$'✏️  Annotate\tFreeze the screen and draw on it\n'
-    items+=$'🔤  OCR region\tRecognise text in an area → clipboard\n'
-    items+=$'🎥  Record screen\tCurrent monitor, with system audio\n'
-    items+=$'✂️  Record region\tSelected area, with system audio'
-  fi
-
-  local choice
-  choice=$(printf '%s\n' "$items" | noctalia dmenu -p 'Capture') || exit 0
-  choice=${choice%%$'\t'*} # the launcher returns the full line; keep the title
-  sleep 0.3                # let the launcher fade out before capturing
-
-  case $choice in
-  *"Screenshot region") exec "$0" region ;;
-  *"Screenshot screen") exec "$0" screen ;;
-  *"Screenshot window") exec "$0" window ;;
-  *"Annotate") exec "$0" annotate ;;
-  *"OCR region") exec "$0" ocr ;;
-  *"Record screen") exec "$0" record ;;
-  *"Record region") exec "$0" record-region ;;
-  *"Stop recording") exec "$0" record ;;
-  esac
-}
-
 case ${1:-} in
-menu) exec noctalia msg panel-toggle launcher "/cap " ;;
-region) noctalia msg screenshot-region ;;
-screen) noctalia msg screenshot-fullscreen monitor ;;
-annotate) noctalia msg screenshot-annotate ;;
-window) window_shot ;;
-ocr) ocr ;;
-record) record ;;
-record-region) if recording; then record; else
-  g=$(pick_region) || exit 0
-  record "$g"
-fi ;;
-*)
-  echo "usage: capture menu|region|screen|annotate|window|ocr|record|record-region" >&2
-  exit 1
-  ;;
+  menu)          exec noctalia msg panel-toggle launcher "/cap " ;;
+  region)        nmsg screenshot-region ;;
+  screen)        nmsg screenshot-fullscreen ;;    # focused monitor; the "monitor" argument is rejected
+  annotate)      annotate ;;
+  window)        window_shot ;;
+  pipe)          from_pipe ;;
+  record)        record ;;
+  record-region) if recording; then record; else g=$(pick_region) || exit 0; record "$g"; fi ;;
+  *) echo "usage: capture menu|region|screen|window|annotate|record|record-region|pipe" >&2; exit 1 ;;
 esac

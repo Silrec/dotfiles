@@ -6,7 +6,6 @@ local items = {
   { id = "screen",        title = "Screenshot screen", subtitle = "Current monitor",                       glyph = "device-desktop" },
   { id = "window",        title = "Screenshot window", subtitle = "Active window",                         glyph = "app-window" },
   { id = "annotate",      title = "Annotate",          subtitle = "Freeze the screen and draw on it",      glyph = "pencil" },
-  { id = "ocr",           title = "OCR region",        subtitle = "Recognise text in an area → clipboard", glyph = "text-recognition" },
   { id = "record",        title = "Record screen",     subtitle = "Current monitor, with system audio",    glyph = "video" },
   { id = "record-region", title = "Record region",     subtitle = "Selected area, with system audio",      glyph = "marquee-2" },
 }

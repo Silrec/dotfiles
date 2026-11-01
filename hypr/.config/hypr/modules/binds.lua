@@ -46,9 +46,12 @@ bind(k("SHIFT + Q"), hl.dsp.window.kill(), "Force-kill frozen window")
 bind(k("F"), hl.dsp.window.fullscreen({ mode = "fullscreen" }), "Fullscreen (covers the bar)")
 bind(k("SHIFT + F"), hl.dsp.window.fullscreen({ mode = "maximized" }), "Maximize (keeps the bar)")
 bind(k("T"), hl.dsp.window.float({ action = "toggle" }), "Toggle floating / tiling")
-if hl.get_config("general.layout") == "master" then
-	bind(k("J"), hl.dsp.layout("togglesplit"), "Toggle split direction (dwindle)")
-end
+bind(k("J"), function()
+	local ws = hl.get_active_special_workspace() or hl.get_active_workspace()
+	if ws and ws.tiled_layout == "dwindle" then
+		hl.dispatch(hl.dsp.layout("togglesplit"))
+	end
+end, "Toggle split direction (dwindle)")
 bind(k("Z"), function()
 	local layout = hl.get_config("general.layout") == "dwindle" and "master" or "dwindle"
 	hl.config({ ["general.layout"] = layout })
@@ -118,27 +121,23 @@ end)
 section("Workspaces")
 
 -- Numpad keycodes for 1…9, 0 (physical keys, independent of NumLock/Shift state)
-local KP = { 87, 88, 89, 83, 84, 85, 79, 80, 81, 90 }
-
 for i = 1, 10 do
 	local key = tostring(i % 10) -- workspace 10 is key 0
-	local kp = "code:" .. KP[i]
-	for _, kk in pairs({ key, kp }) do
-		bind(k(kk), hl.dsp.focus({ workspace = i }), "Workspace " .. i, { list = false })
-		bind(
-			k("SHIFT + " .. kk),
-			hl.dsp.window.move({ workspace = i, follow = true }),
-			"Move window to workspace " .. i,
-			{ list = false }
-		)
-		bind(
-			k("ALT + " .. kk),
-			hl.dsp.window.move({ workspace = i, follow = false }),
-			"Send window to workspace " .. i,
-			{ list = false }
-		)
-	end
+	bind(k(key), hl.dsp.focus({ workspace = i }), "Workspace " .. i, { list = false })
+	bind(
+		k("SHIFT + " .. key),
+		hl.dsp.window.move({ workspace = i, follow = true }),
+		"Move window to workspace " .. i,
+		{ list = false }
+	)
+	bind(
+		k("ALT + " .. key),
+		hl.dsp.window.move({ workspace = i, follow = false }),
+		"Send window to workspace " .. i,
+		{ list = false }
+	)
 end
+
 doc("Super + 1…0", "Go to workspace 1–10")
 doc("Super + Shift + 1…0", "Move window to workspace and follow")
 doc("Super + Alt + 1…0", "Send window to workspace")
@@ -171,7 +170,7 @@ bind(k("mouse_up"), hl.dsp.focus({ workspace = "e-1" }), "Previous workspace")
 bind(k("D"), hl.dsp.focus({ workspace = "emptym" }), "Go to an empty workspace")
 
 bind(k("S"), hl.dsp.workspace.toggle_special("scratchpad"), "Show / hide scratchpad")
-bind(k("CTRL + S"), hl.dsp.window.move({ workspace = "special:scratchpad" }), "Send window to scratchpad")
+bind(k("SHIFT + S"), hl.dsp.window.move({ workspace = "special:scratchpad" }), "Send window to scratchpad")
 
 bind(k("CTRL + SHIFT + left"), hl.dsp.workspace.move({ monitor = "l" }), "Move workspace to left monitor")
 bind(k("CTRL + SHIFT + right"), hl.dsp.workspace.move({ monitor = "r" }), "Move workspace to right monitor")
@@ -182,7 +181,6 @@ bind(k("CTRL + SHIFT + right"), hl.dsp.workspace.move({ monitor = "r" }), "Move 
 section("Apps")
 
 bind(k("Return"), hl.dsp.exec_cmd(v.terminal), "Terminal")
---bind("CTRL + ALT + T", hl.dsp.exec_cmd(v.terminal), "Terminal")
 bind(
 	k("SHIFT + Return"),
 	hl.dsp.exec_cmd(v.terminal, { float = true, size = { 1100, 700 }, center = true }),
@@ -206,29 +204,8 @@ section("Screenshots and tools")
 kb.section("Capture")
 bind("Print", n("screenshot-fullscreen"), "Screenshot: full screen")
 local cap = os.getenv("HOME") .. "/.local/bin/capture "
---kb.bind("Print", hl.dsp.exec_cmd(cap .. "menu"), "Capture menu")
 bind(k("Print"), n("screenshot-region"), "Screenshot: region")
 kb.bind(k("SHIFT + Print"), hl.dsp.exec_cmd(cap .. "menu"), "Capture menu")
--- Active window -> clipboard (needs grim, wl-clipboard)
---bind("ALT + Print", function()
---	local w = hl.get_active_window()
---	if not w then
---		return
---	end
---	local geo = string.format("%d,%d %dx%d", w.at.x, w.at.y, w.size.x, w.size.y)
---	hl.exec_cmd('grim -g "' .. geo .. '" - | wl-copy')
---	v.notify("Screenshot", "Window copied to clipboard")
---end, "Screenshot: active window to clipboard")
-
--- needs grim, slurp, tesseract, tesseract-data-eng, wl-clipboard
---bind(
---	k("SHIFT + T"),
---	hl.dsp.exec_cmd('grim -g "$(slurp)" - | tesseract stdin stdout -l eng 2>/dev/null | wl-copy'),
---	"Copy text from screen region (OCR)"
---)
-
--- needs hyprpicker
---bind(k("SHIFT + C"), hl.dsp.exec_cmd("hyprpicker -a"), "Color picker (copies hex)")
 
 -- needs wf-recorder
 bind(
@@ -251,38 +228,14 @@ bind(
 section("Toggles")
 
 bind(k("ALT + D"), n("notification-dnd-toggle"), "Do Not Disturb")
---bind(k("ALT + N"), n("nightlight-force-toggle"), "Night light")
 bind(k("ALT + C"), n("caffeine-toggle"), "Caffeine (block idle / lock)")
---bind(k("ALT + B"), n("bar-toggle"), "Show / hide bar")
---bind(k("ALT + T"), n("theme-mode-toggle"), "Dark / light theme")
 bind(k("ALT + K"), n("mic-mute"), "Mute microphone")
---bind(k("CTRL + R"), hl.dsp.exec_cmd("hyprctl reload"), "Reload Hyprland config")
---bind(k("Space"), hl.dsp.exec_cmd("hyprctl switchxkblayout current next"), "Switch keyboard layout")
 
--- Game mode: animations, blur and shadows off (reset on config reload)
---local gameMode = false
---bind(k("ALT + G"), function()
---	gameMode = not gameMode
---	hl.config({
---		["animations.enabled"] = not gameMode,
---		["decoration.blur.enabled"] = not gameMode,
---		["decoration.shadow.enabled"] = not gameMode,
---	})
---	v.notify("Game mode", gameMode and "On" or "Off")
---end, "Game mode (animations, blur, shadows off)")
+for i = 1, 4 do
+	bind(k("F" .. (i + 4)), hl.dsp.exec_cmd("~/.local/bin/macro toggle " .. i), "Macro " .. i .. " (toggle)")
+end
 
--- Pass-through: disables every bind except this one and the media keys (for games/VMs)
---bind(k("ALT + escape"), function()
---	hl.dispatch(hl.dsp.submap("passthrough"))
---	v.notify("Keybinds disabled", "Super+Alt+Esc to restore")
---end, "Pass-through: disable all keybinds (press again to restore)")
---hl.define_submap("passthrough", function()
---	bind(k("ALT + escape"), function()
---		hl.dispatch(hl.dsp.submap("reset"))
---		v.notify("Keybinds restored")
---	end)
---end)
-
+bind(k("F4"), hl.dsp.exec_cmd("~/.local/bin/macro stop"), "Stop macro")
 ---------------------------
 ---- MEDIA / HARDWARE ----
 ---------------------------

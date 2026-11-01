@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# monitor-fix: Hyprland sometimes re-adds a monitor after an HDMI glitch with no mode (0x0).
+# Re-apply this host's monitor rules (modules/monitors.lua) until every monitor has a mode.
+logger -t monitor-fix "monitor added, checking modes"
+for i in 1 2 3 4 5; do
+  sleep 1
+  if ! hyprctl monitors -j | jq -e 'any(.[]; .width == 0)' >/dev/null; then
+    (( i == 1 )) && logger -t monitor-fix "all monitors have a mode, nothing to do" \
+                 || logger -t monitor-fix "fixed after $((i - 1)) re-apply(s)"
+    exit 0
+  fi
+  hyprctl eval 'require("modules.monitors").reapply()' >/dev/null
+  logger -t monitor-fix "a monitor was 0x0, re-applied monitor rules"
+done
+logger -t monitor-fix "gave up: a monitor is still 0x0"

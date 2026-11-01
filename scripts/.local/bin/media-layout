@@ -34,11 +34,11 @@ open() { # open <class> <command...>, wait (max 5 s) for its window
 was_shown=0
 shown && was_shown=1
 
-open media-rmpc kitty --class media-rmpc -e rmpc # the rule puts it in the scratchpad
-focus media-rmpc                                 # shows the scratchpad; rmpc is now the active window
-open Throne throne                               # splits rmpc → rmpc | btop
-focus Throne
-open media-cava kitty --class media-cava -e cava # splits btop → btop over cava
+open media-rmpc kitty --class media-rmpc -o confirm_os_window_close=0 -e rmpc # the rule puts it in the scratchpad
+focus media-rmpc                                                              # shows the scratchpad; rmpc is now the active window
+open Throne throne                                                            # splits rmpc → rmpc | btop
+#focus Throne
+#open media-cava kitty --class media-cava -e cava # splits btop → btop over cava
 
 # hide the scratchpad again if it was hidden before we started
 if ((! was_shown)) && shown; then

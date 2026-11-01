@@ -19,9 +19,6 @@ hl.on("hyprland.start", function()
 	if not uwsm then
 		launch("noctalia")
 	end
-	if not uwsm then
-		launch("kanshi")
-	end
 
 	--local scratch = { workspace = "special:scratchpad silent" }
 	launch(os.getenv("HOME") .. "/.local/bin/media-layout")

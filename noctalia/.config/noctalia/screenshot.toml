@@ -1,0 +1,13 @@
+[shell.screenshot]
+confirm_region = true                      # after selecting, wait for Enter/Space, Ctrl+C or Ctrl+S
+save_to_file = true                        # Enter/Space (the default): save…
+copy_to_clipboard = true                   # …and copy
+pipe_to_command = true
+pipe_command = "~/.local/bin/capture pipe" # notifies and offers OCR
+
+# Hide Noctalia's own "Screenshot saved" toast; the script sends its own
+[notification.filter.screenshot-saved]
+match = "noctalia"
+match_content = "^Screenshot saved$"
+show_toast = false
+play_sound = false

@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# macro: run hand-written input macros (via ydotool) from ~/.config/macros/<slot>.sh
+#   macro toggle SLOT   start SLOT; stop it if it's the one running (starting one stops any other)
+#   macro stop          stop whatever is running and release every held key/button
+#   macro status        print the running slot, if any
+# Only one macro runs at a time, so held keys from two macros can never mix.
+set -u
+dir=${XDG_CONFIG_HOME:-$HOME/.config}/macros
+run=${XDG_RUNTIME_DIR:-/tmp}/macro
+mkdir -p "$run"
+hdr=/usr/include/linux/input-event-codes.h
+
+say() { notify-send -a macro -t 1500 -h string:x-canonical-private-synchronous:macro "$@"; }
+name_of() {
+  local n
+  n=$(sed -n 's/^# name: *//p' "$dir/$1.sh" 2>/dev/null | head -n1)
+  echo "${n:-Macro $1}"
+}
+alive() { [[ -f $run/pid ]] && kill -0 "$(<"$run/pid")" 2>/dev/null; }
+
+release_all() { # release everything listed in $run/held
+  [[ -f $run/held ]] || return 0
+  local h
+  while read -r h; do
+    case $h in
+    k*) ydotool key "${h#k}:0" >/dev/null 2>&1 ;;
+    m*) ydotool click "$(printf '0x%X' $((0x80 | ${h#m})))" >/dev/null 2>&1 ;;
+    esac
+  done <"$run/held"
+  rm -f "$run/held"
+}
+
+stop() {
+  if alive; then
+    local pid
+    pid=$(<"$run/pid")
+    kill -TERM -- "-$pid" 2>/dev/null # the macro's whole process group, sleeps included
+    for _ in {1..20}; do
+      kill -0 "$pid" 2>/dev/null || break
+      sleep 0.05
+    done
+    kill -KILL -- "-$pid" 2>/dev/null
+  fi
+  release_all # in case the macro couldn't clean up itself
+  rm -f "$run/pid" "$run/slot"
+}
+
+start() {
+  local slot=$1
+  [[ -f $dir/$slot.sh ]] || {
+    say "Macro $slot" "No file: ${dir/#$HOME/\~}/$slot.sh"
+    exit 1
+  }
+  printf '%s' "$slot" >"$run/slot"
+  setsid "$0" _run "$slot" >/dev/null 2>&1 & # own process group, so stop can kill it all
+  echo $! >"$run/pid"
+  say "▶ $(name_of "$slot")" "Press again or Super+F4 to stop"
+}
+
+# ---------- inside a running macro: the functions your macro files use ----------
+_run() {
+  local slot=$1
+  code() { # key name (w, space, leftshift, f1…) or number → evdev code
+    [[ $1 =~ ^[0-9]+$ ]] && {
+      echo "$1"
+      return
+    }
+    local c
+    c=$(awk -v n="KEY_${1^^}" '$1 == "#define" && $2 == n {print $3; exit}' "$hdr")
+    [[ $c =~ ^[0-9]+$ ]] || {
+      say "Macro error" "Unknown key: $1"
+      return 1
+    }
+    echo "$c"
+  }
+  btn() { case ${1:-left} in left) echo 0 ;; right) echo 1 ;; middle) echo 2 ;;
+  *)
+    say "Macro error" "Unknown button: $1"
+    return 1
+    ;;
+  esac }
+
+  press() {
+    local c
+    c=$(code "$1") || exit 1
+    ydotool key "$c:1" >/dev/null
+    echo "k$c" >>"$run/held"
+  }
+  release() {
+    local c
+    c=$(code "$1") || exit 1
+    ydotool key "$c:0" >/dev/null
+    sed -i "/^k$c\$/d" "$run/held" 2>/dev/null
+  }
+  tap() {
+    press "$1"
+    pause "${2:-30}"
+    release "$1"
+  }
+  mouse_down() {
+    local b
+    b=$(btn "${1:-}") || exit 1
+    ydotool click "$(printf '0x%X' $((0x40 | b)))" >/dev/null
+    echo "m$b" >>"$run/held"
+  }
+  mouse_up() {
+    local b
+    b=$(btn "${1:-}") || exit 1
+    ydotool click "$(printf '0x%X' $((0x80 | b)))" >/dev/null
+    sed -i "/^m$b\$/d" "$run/held" 2>/dev/null
+  }
+  click() {
+    local b
+    b=$(btn "${1:-}") || exit 1
+    ydotool click "$(printf '0x%X' $((0xC0 | b)))" >/dev/null
+  }
+  type_text() { ydotool type -- "$1" >/dev/null; }
+  pause() {
+    sleep "$(awk -v ms="$1" 'BEGIN { print ms / 1000 }')" &
+    wait $!
+  } # milliseconds; stop interrupts it
+  idle() {
+    sleep infinity &
+    wait $!
+  } # keep holding until stopped
+
+  cleanup() {
+    release_all
+    [[ -f $run/pid && $(<"$run/pid") == "$$" ]] && rm -f "$run/pid" "$run/slot"
+  }
+  trap cleanup EXIT
+  trap 'exit 0' TERM INT
+  # shellcheck source=/dev/null
+  source "$dir/$slot.sh"
+  say "■ $(name_of "$slot")" "Finished" # reached only by macros that end by themselves
+}
+
+case ${1:-} in
+toggle)
+  [[ ${2:-} =~ ^[0-9]+$ ]] || {
+    echo "usage: macro toggle SLOT" >&2
+    exit 1
+  }
+  if alive && [[ $(<"$run/slot") == "$2" ]]; then
+    stop
+    say "■ $(name_of "$2")" "Stopped"
+  else
+    stop
+    start "$2"
+  fi
+  ;;
+stop)
+  was=$(alive && cat "$run/slot")
+  stop
+  [[ -n $was ]] && say "■ $(name_of "$was")" "Stopped"
+  ;;
+status) alive && echo "running: $(<"$run/slot") ($(name_of "$(<"$run/slot")"))" || echo "nothing running" ;;
+_run) _run "$2" ;;
+*)
+  echo "usage: macro toggle SLOT | stop | status" >&2
+  exit 1
+  ;;
+esac

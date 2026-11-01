@@ -111,9 +111,13 @@ alias v='nvim' sv='sudoedit'
 alias -g G='| grep -i' L='| less' NE='2>/dev/null'      # e.g. pacman -Q G python
 alias -s {md,txt,lua,toml,conf}=nvim                    # type notes.md to open it
 
+# --- Claude
+alias agents='machinectl shell claude@ /bin/zsh -lc "cd /srv/ai && herdr"'
+
 # --- personal aliases ---
 alias edit='$EDITOR'
 alias sedit='sudoedit'
+alias trash='trash-put -v'
 
 # --- yazi: cd into the dir you were in when quitting ---
 function y() {
