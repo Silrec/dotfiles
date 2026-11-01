@@ -231,11 +231,33 @@ bind(k("ALT + D"), n("notification-dnd-toggle"), "Do Not Disturb")
 bind(k("ALT + C"), n("caffeine-toggle"), "Caffeine (block idle / lock)")
 bind(k("ALT + K"), n("mic-mute"), "Mute microphone")
 
-for i = 1, 4 do
-	bind(k("F" .. (i + 4)), hl.dsp.exec_cmd("~/.local/bin/macro toggle " .. i), "Macro " .. i .. " (toggle)")
+-- macros: super+f5..f8 toggle ~/.local/bin/macro slots 1..4, super+f4 stops any.
+-- The action runs when super is released: since 0.57 Hyprland swallows keys sent
+-- while a bind's modifier is still held, so the macro must not start (or stop) before that.
+local pending = nil
+local SUPER = { [133] = true, [134] = true } -- xkb keycodes of Super_L / Super_R (wev: "key: 133")
+
+hl.on("input.keyboard.key", function(code, _, state)
+	if pending and SUPER[code] and state == 0 then -- state 0 = released
+		local cmd = pending
+		pending = nil
+		hl.timer(function()
+			hl.exec_cmd(cmd)
+		end, { timeout = 30, type = "oneshot" }) -- let Hyprland finish processing the release first
+	end
+end)
+
+local function after_super(cmd)
+	return function()
+		pending = cmd
+	end
 end
 
-bind(k("F4"), hl.dsp.exec_cmd("~/.local/bin/macro stop"), "Stop macro")
+for i = 1, 4 do
+	bind(k("F" .. (i + 4)), after_super("~/.local/bin/macro toggle " .. i), "Macro " .. i .. " (toggle)")
+end
+
+bind(k("F4"), after_super("~/.local/bin/macro stop"), "Stop macro")
 ---------------------------
 ---- MEDIA / HARDWARE ----
 ---------------------------

@@ -2,6 +2,7 @@ HISTFILE=$HOME/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt share_history hist_ignore_all_dups hist_ignore_space autocd interactive_comments
+unsetopt BEEP
 WORDCHARS=${WORDCHARS//\/}
 
 # --- Completion ---
